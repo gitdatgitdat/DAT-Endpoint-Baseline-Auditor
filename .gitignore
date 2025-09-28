@@ -1,0 +1,7 @@
+# outputs
+reports/
+logs/
+*.json
+*.csv
+.vscode/
+.venv/
