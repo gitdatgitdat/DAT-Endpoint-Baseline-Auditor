@@ -141,20 +141,20 @@ function Test-LAPS {
 
 function Get-EndpointBaselineLocal {
   $checks = [ordered]@{
-    BitLocker     = Test-BitLockerOS
-    SecureBootTPM = Test-SecureBootTPM
-    Defender      = Test-Defender
-    Firewall      = Test-FirewallAllProfiles
-    RDPDisabled   = Test-RDPDisabled
-    SMB1Disabled  = Test-SMB1Disabled
-    AdminsAllow   = Test-AdminsAllowlist
-    LAPS          = Test-LAPS
+    BitLocker     = { Test-BitLockerOS }
+    SecureBootTPM = { Test-SecureBootTPM }
+    Defender      = { Test-Defender }
+    Firewall      = { Test-FirewallAllProfiles }
+    RDPDisabled   = { Test-RDPDisabled }
+    SMB1Disabled  = { Test-SMB1Disabled }
+    AdminsAllow   = { Test-AdminsAllowlist }
+    LAPS          = { Test-LAPS }
   }
 
   $reasons = @()
   foreach ($k in $checks.Keys) {
     $res = & $checks[$k]
-    if (-not $res.Pass) { $reasons += "$k:$($res.Detail)" }
+    if (-not $res.Pass) { $reasons += ("{0}:{1}" -f $k, $res.Detail) }
     Set-Variable -Name ("c_" + $k) -Value $res -Scope Local
   }
 
@@ -217,7 +217,7 @@ function Invoke-RemoteBaseline {
       Write-Log INFO "OK $t -> $($res.Compliance)"
     } catch {
       $msg = $_.Exception.Message
-      Write-Log ERROR "RemoteError $t: $msg"
+      Write-Log ERROR "RemoteError $($t): $msg"
       $results += [pscustomobject]@{
         ComputerName=$t; Compliance='Unknown'; Reasons="RemoteError: $msg"; CollectedAt=[datetime]::UtcNow
       }
