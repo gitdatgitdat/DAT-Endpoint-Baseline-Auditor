@@ -64,6 +64,17 @@ function Get-TargetsFromCsv { param([Parameter(Mandatory)][string]$Path)
   $rows | ForEach-Object { $_.$col } |? { $_ } |% Trim | Sort-Object -Unique
 }
 
+function Test-CredentialGuard {
+  try {
+    $dg = Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\Microsoft\Windows\DeviceGuard -ErrorAction Stop
+    $cfg = $dg.SecurityServicesConfigured -contains 2
+    $run = $dg.SecurityServicesRunning   -contains 2
+    $lsa = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa' -ErrorAction SilentlyContinue).RunAsPPL
+    $ok  = $run -and ($lsa -in 1,2)
+    @{ Pass=$ok; Detail=("CG running={0}; LSA PPL={1}" -f $run,$lsa) }
+  } catch { @{ Pass=$false; Detail="DeviceGuard/LSA check failed" } }
+}
+
 function Test-BitLockerOS {
   try {
     $bl = Get-BitLockerVolume -MountPoint $env:SystemDrive -ErrorAction Stop
