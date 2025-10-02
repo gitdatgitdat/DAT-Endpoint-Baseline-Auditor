@@ -116,6 +116,16 @@ function Test-RDPDisabled {
   } catch { return @{ Pass=$false; Detail="RDP registry read failed" } }
 }
 
+function Test-RDP_NLA {
+  try {
+    $ts  = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server')
+    $ena = ($ts.fDenyTSConnections -eq 0)
+    if (-not $ena) { return @{ Pass=$true; Detail='RDP disabled' } }
+    $nla = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp').UserAuthentication
+    @{ Pass=($nla -eq 1); Detail=("RDP enabled; NLA={0}" -f $nla) }
+  } catch { @{ Pass=$false; Detail="RDP/NLA check failed" } }
+}
+
 function Test-SMB1Disabled {
   try {
     $f = Get-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -ErrorAction Stop
@@ -128,6 +138,14 @@ function Test-SMB1Disabled {
       return @{ Pass=$ok; Detail="SMB1Reg=$reg (0/null=disabled)" }
     } catch { return @{ Pass=$false; Detail="SMB1 check failed" } }
   }
+}
+
+function Test-SMBSigningRequired {
+  try {
+    $p = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters' -ErrorAction Stop
+    $req = $p.RequireSecuritySignature
+    @{ Pass=($req -eq 1); Detail=("RequireSecuritySignature={0}" -f $req) }
+  } catch { @{ Pass=$false; Detail="SMB signing check failed" } }
 }
 
 function Test-AdminsAllowlist {
@@ -157,7 +175,9 @@ function Get-EndpointBaselineLocal {
     Defender      = { Test-Defender }
     Firewall      = { Test-FirewallAllProfiles }
     RDPDisabled   = { Test-RDPDisabled }
+    RDP_NLA       = { Test-RDP_NLA }
     SMB1Disabled  = { Test-SMB1Disabled }
+    SMBSigning    = { Test-SMBSigningRequired }
     AdminsAllow   = { Test-AdminsAllowlist }
     LAPS          = { Test-LAPS }
   }
