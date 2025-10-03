@@ -83,6 +83,14 @@ function Test-BitLockerOS {
   } catch { return @{ Pass=$false; Detail="BitLocker cmdlet not available or error" } }
 }
 
+function Test-BitLockerTPMProtector {
+  try {
+    $bl = Get-BitLockerVolume -MountPoint $env:SystemDrive -ErrorAction Stop
+    $hasTpm = @($bl.KeyProtector).KeyProtectorType -contains 'Tpm'
+    @{ Pass=$hasTpm; Detail=("ProtectorTypes=" + ((@($bl.KeyProtector).KeyProtectorType) -join ',')) }
+  } catch { @{ Pass=$false; Detail="BitLocker protector check failed" } }
+}
+
 function Test-SecureBootTPM {
   $sb=$null;$tpm=$null
   try { $sb = Confirm-SecureBootUEFI -ErrorAction Stop } catch { $sb=$false }
@@ -99,6 +107,18 @@ function Test-Defender {
     $okAge = ($age -le $MaxSigAgeDays)
     return @{ Pass=($okRT -and $okAge); Detail="RT=$okRT; SigAge=$age d (<= $MaxSigAgeDays)" }
   } catch { return @{ Pass=$false; Detail="Defender not available or disabled" } }
+}
+
+function Test-DefenderAdvanced {
+  try {
+    $s = Get-MpComputerStatus -ErrorAction Stop
+    $p = Get-MpPreference     -ErrorAction Stop
+    $tp = $s.IsTamperProtected
+    $cd = $p.MAPSReporting -in 1,2  # Basic or Advanced MAPS
+    $asr = $p.AttackSurfaceReductionRules_Actions
+    $anyBlock = ($asr -and ($asr.Values -contains 1))  # 1=Block
+    @{ Pass=($tp -and $cd -and $anyBlock); Detail=("Tamper={0}; MAPS={1}; ASR any block={2}" -f $tp,$p.MAPSReporting,$anyBlock) }
+  } catch { @{ Pass=$false; Detail="Defender advanced check failed" } }
 }
 
 function Test-FirewallAllProfiles {
@@ -171,8 +191,10 @@ function Test-LAPS {
 function Get-EndpointBaselineLocal {
   $checks = [ordered]@{
     BitLocker     = { Test-BitLockerOS }
+    BitLockerTPM  = { Test-BitLockerTPMProtector }
     SecureBootTPM = { Test-SecureBootTPM }
     Defender      = { Test-Defender }
+    DefenderAdv   = { Test-DefenderAdvanced }
     Firewall      = { Test-FirewallAllProfiles }
     RDPDisabled   = { Test-RDPDisabled }
     RDP_NLA       = { Test-RDP_NLA }
