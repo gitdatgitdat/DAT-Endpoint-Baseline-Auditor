@@ -26,11 +26,16 @@ $rows = foreach ($r in ($data | Sort-Object ComputerName)) {
   <td class="name">$(H $r.ComputerName)</td>
   <td class="status"><span class="dot"></span>$(H $r.Compliance)</td>
   <td>$(H $r.BitLocker)</td>
+  <td>$(H $r.BitLockerTPM)</td>
   <td>$(H $r.SecureBootTPM)</td>
+  <td>$(H $r.CredentialGuard)</td>
   <td>$(H $r.Defender)</td>
+  <td>$(H $r.DefenderAdv)</td>
   <td>$(H $r.Firewall)</td>
   <td>$(H $r.RDP)</td>
+  <td>$(H $r.RDP_NLA)</td>
   <td>$(H $r.SMB1)</td>
+  <td>$(H $r.SMBSigning)</td>
   <td class="reasons">$(H $r.Reasons)</td>
 </tr>
 "@
@@ -51,7 +56,12 @@ tr.ok .dot{background:var(--ok)} tr.bad .dot{background:var(--bad)} tr.unk .dot{
 <h1>Endpoint Baseline</h1>
 <div class="sub">Generated $(Get-Date)</div>
 <table id="t"><thead>
-<tr><th>Computer</th><th>Status</th><th>BitLocker</th><th>SecureBoot/TPM</th><th>Defender</th><th>Firewall</th><th>RDP</th><th>SMB1</th><th>Reasons</th></tr>
+<tr>
+  <th>Computer</th><th>Status</th>
+  <th>BitLocker</th><th>BitLocker TPM</th><th>SecureBoot/TPM</th><th>CredGuard/LSA</th>
+  <th>Defender</th><th>Defender Adv</th><th>Firewall</th><th>RDP</th><th>RDP NLA</th>
+  <th>SMB1</th><th>SMB Signing</th><th>Reasons</th>
+</tr>
 </thead><tbody>
 $($rows -join "")
 </tbody></table>
