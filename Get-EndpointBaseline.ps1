@@ -190,18 +190,19 @@ function Test-LAPS {
 
 function Get-EndpointBaselineLocal {
   $checks = [ordered]@{
-    BitLocker     = { Test-BitLockerOS }
-    BitLockerTPM  = { Test-BitLockerTPMProtector }
-    SecureBootTPM = { Test-SecureBootTPM }
-    Defender      = { Test-Defender }
-    DefenderAdv   = { Test-DefenderAdvanced }
-    Firewall      = { Test-FirewallAllProfiles }
-    RDPDisabled   = { Test-RDPDisabled }
-    RDP_NLA       = { Test-RDP_NLA }
-    SMB1Disabled  = { Test-SMB1Disabled }
-    SMBSigning    = { Test-SMBSigningRequired }
-    AdminsAllow   = { Test-AdminsAllowlist }
-    LAPS          = { Test-LAPS }
+    BitLocker        = { Test-BitLockerOS }
+    BitLockerTPM     = { Test-BitLockerTPMProtector }
+    SecureBootTPM    = { Test-SecureBootTPM }
+    CredentialGuard  = { Test-CredentialGuard } 
+    Defender         = { Test-Defender }
+    DefenderAdv      = { Test-DefenderAdvanced }
+    Firewall         = { Test-FirewallAllProfiles }
+    RDPDisabled      = { Test-RDPDisabled }
+    RDP_NLA          = { Test-RDP_NLA }
+    SMB1Disabled     = { Test-SMB1Disabled }
+    SMBSigning       = { Test-SMBSigningRequired }
+    AdminsAllow      = { Test-AdminsAllowlist }
+    LAPS             = { Test-LAPS }
   }
 
   $reasons = @()
@@ -216,11 +217,16 @@ function Get-EndpointBaselineLocal {
     Compliance     = if ($reasons.Count) { "NonCompliant" } else { "Compliant" }
     Reasons        = ($reasons -join '; ')
     BitLocker      = $c_BitLocker.Detail
+    BitLockerTPM   = $c_BitLockerTPM.Detail  
     SecureBootTPM  = $c_SecureBootTPM.Detail
+    CredentialGuard= $c_CredentialGuard.Detail 
     Defender       = $c_Defender.Detail
+    DefenderAdv    = $c_DefenderAdv.Detail
     Firewall       = $c_Firewall.Detail
     RDP            = $c_RDPDisabled.Detail
+    RDP_NLA        = $c_RDP_NLA.Detail  
     SMB1           = $c_SMB1Disabled.Detail
+    SMBSigning     = $c_SMBSigning.Detail 
     Admins         = $c_AdminsAllow.Detail
     LAPS           = $c_LAPS.Detail
     CollectedAt    = [datetime]::UtcNow
@@ -233,15 +239,20 @@ function Invoke-RemoteBaseline {
 
   $sb = {
     param($MaxSigAgeDays,$AllowedAdmins,$RequireLAPS)
-    ${function:Test-BitLockerOS} | Out-Null
-    ${function:Test-SecureBootTPM} | Out-Null
-    ${function:Test-Defender} | Out-Null
-    ${function:Test-FirewallAllProfiles} | Out-Null
-    ${function:Test-RDPDisabled} | Out-Null
-    ${function:Test-SMB1Disabled} | Out-Null
-    ${function:Test-AdminsAllowlist} | Out-Null
-    ${function:Test-LAPS} | Out-Null
-    ${function:Get-EndpointBaselineLocal} | Out-Null
+    ${function:Test-BitLockerOS}            | Out-Null
+    ${function:Test-BitLockerTPMProtector}  | Out-Null
+    ${function:Test-SecureBootTPM}          | Out-Null
+    ${function:Test-CredentialGuard}        | Out-Null
+    ${function:Test-Defender}               | Out-Null
+    ${function:Test-DefenderAdvanced}       | Out-Null
+    ${function:Test-FirewallAllProfiles}    | Out-Null
+    ${function:Test-RDPDisabled}            | Out-Null
+    ${function:Test-RDP_NLA}                | Out-Null
+    ${function:Test-SMB1Disabled}           | Out-Null
+    ${function:Test-SMBSigningRequired}     | Out-Null
+    ${function:Test-AdminsAllowlist}        | Out-Null
+    ${function:Test-LAPS}                   | Out-Null
+    ${function:Get-EndpointBaselineLocal}   | Out-Null
     Set-Variable MaxSigAgeDays -Value $MaxSigAgeDays -Scope Script
     Set-Variable AllowedAdmins -Value $AllowedAdmins -Scope Script
     if ($RequireLAPS) { Set-Variable RequireLAPS -Value $true -Scope Script }
@@ -297,7 +308,7 @@ if (-not $__isDotSourced) {
   }
 
   # console preview
-  $all | Select-Object ComputerName,Compliance,Reasons,BitLocker,SecureBootTPM,Defender,Firewall,RDP,SMB1 |
+  $all | Select-Object ComputerName,Compliance,Reasons,BitLocker,BitLockerTPM,SecureBootTPM,CredentialGuard,Defender,DefenderAdv,Firewall,RDP,RDP_NLA,SMB1,SMBSigning |
     Sort-Object ComputerName | Format-Table -AutoSize
 
   # outputs
